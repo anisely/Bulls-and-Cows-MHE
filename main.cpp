@@ -495,50 +495,72 @@ void przeszukiwanie_tabu(int *secret_numbers, int count_number_to_find)
 
 void symulowane_wyzarzanie(int *secret_numbers, int count_number_to_find) {
 
-	// Random number
+	// 1. Wybierz losowe rozwiązanie startowe i. Ustal paramter T = T_max
+	// 2. Wylicz f(i), czyli koszt rozwiązania i.
+	// 3. Wyznacz propozycję nowego rozwiązania j (np. losowy sąsiad).
+	// 4. Wylicz f(j), czyli koszt rozwiązania j.
+	// 5. Zaakceptuj nowe rozwiązanie, jeżeli obniża one całkowity koszt. Jeżeli jednak ta zmiana podwyższa całkowity koszt to nowe rozwiązanie może być przyjęte z pewnym prawdopodobieństwem.
+	// 6. Zmniejsz wartość parametru T.
+	// 7. Zakończ algorytm lub wróć do kroku 3.
+
+	double T_MAX = 100.0;
+	double T = T_MAX;
+
+	// 1. Random number
 	int *x = new int[count_number_to_find];
 	FillSecretNumbers(x, count_number_to_find);
-	int *Best = new int[count_number_to_find];
 	int *sasiad = new int[count_number_to_find];
 
-	for (int j = 0; j < count_number_to_find; j++)
-	{
-		sasiad[j] = x[j];
-		Best[j] = x[j];
-	}
+	for (int i = 0; i < 1000; i++) {
 
-	/* generate position 0-max and number between 0 and 9: */
-	int value = rand() % 10;
-	int position = rand() % count_number_to_find;
-	sasiad[position] = value;
-
-	int a = goal2(secret_numbers, x, count_number_to_find);
-	int b = goal2(secret_numbers, sasiad, count_number_to_find);
-
-
-
-	if (a >= b)
-	{
 		for (int j = 0; j < count_number_to_find; j++)
 		{
-			Best[j] =  x[j];
+			sasiad[j] = x[j];
 		}
-	} else {
 
+		// 3. generate position 0-max and number between 0 and 9: */
+		int value = rand() % 10;
+		int position = rand() % count_number_to_find;
+		sasiad[position] = value;
+
+		// 2.
+		int a = goal2(secret_numbers, x, count_number_to_find);
+		// 4.
+		int b = goal2(secret_numbers, sasiad, count_number_to_find);
+
+		// 5. 
+		if (b >= a)
+		{
+			// nowe rozwizanie lepsze, to zawsze nadpisz
+			for (int j = 0; j < count_number_to_find; j++)
+			{
+				x[j] =  sasiad[j];
+			}
+		} else {
+			// nowe rozwiazanie gorsze, zobaczy czy nadpisac
+			double param, result;
+			param = 5.0;
+			result = exp ((b-a)/T);
+
+			double randd = (rand() % 100) / 100;
+
+			if ( result > randd ) {
+				for (int j = 0; j < count_number_to_find; j++)
+				{
+					x[j] =  sasiad[j];
+				}
+			}
+
+			if (T > 0)
+				T = T - 2.0;
+
+		}
 
 	}
 
+	cout << "Wyzarzanie:";
+	print_array(x, count_number_to_find);
 
-	for(int i = 0; i < 300; i++) {
-		double param, result;
-  		param = 5.0;
-  		result = exp (-abs(param));
-
-
-
-
-
-	}
 }
 
 int main()
