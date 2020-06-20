@@ -12,20 +12,31 @@
  *
  *         Author:  YOUR NAME (), 
  *   Organization:  
+ * 
+ * 	  Compilation:  g++ main.cpp
  *
  * =====================================================================================
  */
+
+// TODO
+// zakończenie algorytmy (połowa możlwiych iteracji bruteforce i BEST nie zmienia się)
 
 #include <iostream>
 #include <stdio.h>	/* printf, scanf, puts, NULL */
 #include <stdlib.h> /* srand, rand */
 #include <time.h>	/* time */
+#include <ctime>
 #include <tuple>
 #include <math.h>
 
 using namespace std;
 
-// ------ tool
+int WEIGHT_BULL = 4;
+int WEIGHT_COW = 3;
+int MAX_SCORE;
+int SIZE;
+int MAX_ITERATIONS;
+
 
 class Number
 {
@@ -35,76 +46,84 @@ class Number
 
 	Number() 
     { 
-		size = 4;
-        int * array = new int[size];
+		this->size = 4;
+        this->array = new int[this->size];
+		for (int i = 0; i < this->size; i++)
+		{
+			this->array[i] = 0;
+		}
+    } 
+
+	Number(int size) 
+    { 
+		this->size = size;
+        this->array = new int[this->size];
+		for (int i = 0; i < this->size; i++)
+		{
+			this->array[i] = 0;
+		}
     } 
 
 	~Number() 
     { 
-        delete[] array;
+        delete[] this->array;
     } 
 
 	void print()
 	{
-		for (int i = size - 1; i >= 0; i--)
+		for (int i = this->size - 1; i >= 0; i--)
 		{
-			cout << array[i];
+			cout << this->array[i];
 		}
-		cout << endl;
+		//cout << endl;
+	}
+
+	void random()
+	{
+		for (int i = 0; i < this->size; i++)
+		{
+			/* generate secret number between 0 and 9: */
+			this->array[i] = rand() % 10;
+		}
+
+	}
+
+	void set_new_value(Number* number)
+	{
+		for (int i = 0; i < this->size; i++)
+		{
+			this->array[i] = number->array[i];
+		}
 	}
 
 };
 
-void print_array(int *array, int count_number_to_find)
+int CountScore(Number *a, Number *b)
 {
-	for (int a = count_number_to_find - 1; a >= 0; a--)
-	{
-		cout << array[a];
-	}
-	cout << endl;
-}
-
-void print_array2(int *array, int count_number_to_find)
-{
-	for (int a = count_number_to_find - 1; a >= 0; a--)
-	{
-		cout << array[a];
-	}
-	cout << endl;
-}
-
-// -------------------------
-
-tuple<int, int> CompareArrays2(int *a, int *b, int size)
-{
-
 	int bull = 0;
 	int cow = 0;
 	int a_count[10] = {0};
 	int b_count[10] = {0};
 
-	//print_array(a, size);
-	//print_array(b, size);
-
-	// find bull or increse, we count all number to find which reapet
-	for (int i = 0; i < size; i++)
+	// COUNT BULL; find bull or increse, we count all number to find which reapet
+	for (int i = 0; i < SIZE; i++)
 	{
-		if (a[i] == b[i])
+		if (a->array[i] == b->array[i])
 			bull++;
 		else
 		{
-			a_count[a[i]]++;
-			b_count[b[i]]++;
+			a_count[a->array[i]]++;
+			b_count[b->array[i]]++;
 		}
 	}
-	//cout << "DUPA!" << endl;
+	//cout << "!!!" << endl;
 	//print_array(a_count, 10);
 	//print_array(b_count, 10);
 
-	// count cow
+	// COUNT COW;
 	for (int j = 0; j < 10; j++)
 	{
-		// get smaller number and add to cow, smaller means reapetad the same number
+		// get smaller number and add to cow, smaller means repeated the same number
 		if (a_count[j] <= b_count[j])
 			cow += a_count[j];
 		else
@@ -113,229 +132,184 @@ tuple<int, int> CompareArrays2(int *a, int *b, int size)
 
 	//cout << "BULL" << bull << "COW" << cow << endl;
 
-	return make_tuple(bull, cow);
-}
-
-int goal(int *a, int *b, int size)
-{
-
-	tuple<int, int> res = CompareArrays2(a, b, size);
-	int bull = get<0>(res);
-	int cow = get<1>(res);
-	//cout << bull << "," << cow << endl;
-	if (bull == size)
-		return 1;
-	else
-		return 0;
-}
-
-int goal2(int *a, int *b, int size)
-{
-
-	tuple<int, int> res = CompareArrays2(a, b, size);
-	int bull = get<0>(res);
-	int cow = get<1>(res);
-
-	return 4 * bull + 3 * cow;
-}
-
-bool CompareArrays(int *a, int *b, int size)
-{
-
-	for (int i = 0; i < size; i++)
-	{
-		if (a[i] == b[i])
-			continue;
-		else
-			return false;
-	}
-
-	return true;
-}
-
-void FillSecretNumbers(int *secret_numbers, int count_number_to_find)
-{
-	int secret;
-
-	/* initialize random seed: */
-
-	for (int i = 0; i < count_number_to_find; i++)
-	{
-		/* generate secret number between 0 and 9: */
-		secret = rand() % 10;
-		secret_numbers[i] = secret;
-	}
+	return 4 * bull + 2 * cow;
 }
 
 // -------- Algorithms -----
 
-void bruteforce(int *secret_numbers, int count_number_to_find)
+void bruteforce(Number *secret)
 {
+	Number *x = new Number(SIZE);
 
-	int iteration = 0;
-
-	// wyzeruj
-	int *to_find_numbers = new int[count_number_to_find];
-	for (int a = 0; a < count_number_to_find; a++)
-	{
-		to_find_numbers[a] = 0;
-	}
-
-	// Loop untill goal is not achived
 	while (1)
 	{
-		iteration++;
-
-		// Alghoritm
-		// Incrementcount_number_to_find
-		for (int i = 0; i < count_number_to_find; i++)
+		// Increment x by one
+		for (int i = 0; i < SIZE; i++)
 		{
-			if (to_find_numbers[i] < 9)
+			if (x->array[i] < 9)
 			{
-				to_find_numbers[i]++;
+				x->array[i]++;
 				break;
 			}
 			else
 			{
-				to_find_numbers[i] = 0;
+				x->array[i] = 0;
 			}
 		}
 
-		// Check goal
-		if (goal(to_find_numbers, secret_numbers, count_number_to_find))
+		if (CountScore(x, secret) == MAX_SCORE)
 			break;
 	}
 
-	// Print results
-	cout << "WIN!" << endl;
-	cout << "Find number: ";
-	print_array(to_find_numbers, count_number_to_find);
-	cout << "Iterations: " << iteration << endl;
+	cout << "Bruteforce: \t";
+	x->print();
+	cout << "\t" << CountScore(secret, x) << endl;
 }
 
-void wspinaczokwy(int *secret_numbers, int count_number_to_find)
+void wspinaczokwy(Number *secret)
 {
 
-	// Random number
-	int *x = new int[count_number_to_find];
-	FillSecretNumbers(x, count_number_to_find);
+	Number* x = new Number(SIZE);
+	x->random();
+	Number *Best = new Number(SIZE);
+	Number *anktualna = new Number(SIZE);
 
-	int *max = new int[count_number_to_find];
-	int *anktualna = new int[count_number_to_find];
-
-	int tmp;
-
-	for (int j = 0; j < count_number_to_find; j++)
+	int iterations = 0;
+	for ( ; iterations < MAX_ITERATIONS; iterations++)
 	{
-		tmp = x[j];
-		anktualna[j] = tmp;
+		anktualna->set_new_value(x);
+
+		int value = rand() % 10;
+		int position = rand() % SIZE;
+		anktualna->array[position] = value;
+
+		if (CountScore(secret, anktualna) >= CountScore(secret, x))
+		{
+			x->set_new_value(anktualna);
+		}	
+
+		if (CountScore(secret, x) == MAX_SCORE)
+			break;
+
 	}
 
-	for (int k = 1; k < 20; k++)
+	cout << "Wspinaczokwy: \t";
+	x->print();
+	cout << "\t" << CountScore(secret, x);
+	cout << "\t" << iterations; 
+	cout << endl;
+
+	delete x, anktualna, Best;
+}
+
+void wspinaczokwy3(Number *secret)
+{
+
+	Number* x = new Number(SIZE);
+	x->random();
+	Number *Best = new Number(SIZE);
+	Number *anktualna = new Number(SIZE);
+
+	int iterations = 0;
+	for ( ; iterations < MAX_ITERATIONS; iterations++)
 	{
 		// Po wszystkich sasiadach
-		// for(int l= 0; l < 2; l++) {
-		for (int i = 0; i < count_number_to_find; i++)
+		for (int i = 0; i < SIZE; i++)
 		{
-
-			for (int j = 0; j < count_number_to_find; j++)
+			for (int j = 0; j < 10; j++)
 			{
-				tmp = x[j];
-				anktualna[j] = tmp;
-			}
+				anktualna->set_new_value(x);
+				anktualna->array[i] = j;
 
-			// dodaj -1 i +1 do kazdje liczby pokolei
-			if (x[i] < 9)
-			{
-				anktualna[i] = x[i] + 1;
-
-				int a = goal2(secret_numbers, anktualna, count_number_to_find);
-				int b = goal2(secret_numbers, x, count_number_to_find);
-				cout << "Aktualna1 " << a << " ";
-				print_array2(anktualna, count_number_to_find);
-				cout << "Max1 " << b << " ";
-				print_array2(x, count_number_to_find);
-				if (a >= b)
+				if (CountScore(secret, anktualna) >= CountScore(secret, x))
 				{
-					for (int j = 0; j < count_number_to_find; j++)
-					{
-						tmp = anktualna[j];
-						x[j] = tmp;
-					}
-				}
-			}
-
-			// dodaj -1 i +1 do kazdje liczby pokolei
-			if (x[i] > 1)
-			{
-				anktualna[i] = x[i] - 2;
-
-				int a = goal2(secret_numbers, anktualna, count_number_to_find);
-				int b = goal2(secret_numbers, x, count_number_to_find);
-				cout << "Aktualna2 " << a << " ";
-				print_array2(anktualna, count_number_to_find);
-				cout << "Max2 " << b << " ";
-				print_array2(x, count_number_to_find);
-				if (a >= b)
-				{
-					for (int j = 0; j < count_number_to_find; j++)
-					{
-						tmp = anktualna[j];
-						x[j] = tmp;
-					}
+					x->set_new_value(anktualna);
 				}
 			}
 		}
-		cout << "MAX ";
-		print_array(x, count_number_to_find);
 
-		if (goal(secret_numbers, anktualna, count_number_to_find))
+		if (CountScore(secret, x) == MAX_SCORE)
 			break;
-		// }
+
 	}
 
-	delete[] x, max, anktualna;
+	cout << "Wspinaczokwy: \t";
+	x->print();
+	cout << "\t" << CountScore(secret, x);
+	cout << "\t" << iterations; 
+	cout << endl;
+
+	delete x, anktualna, Best;
 }
 
-int f() {
-	
-}
+void wspinaczokwy2(Number *secret)
+{
 
+	Number* x = new Number(SIZE);
+	x->random();
+	Number *Best = new Number(SIZE);
+	Number *anktualna = new Number(SIZE);
 
-void somsiad(int * secret_numbers, int * x, int * anktualna, int count_number_to_find) {
-	int tmp;
-
-	int a = goal2(secret_numbers, anktualna, count_number_to_find);
-	int b = goal2(secret_numbers, x, count_number_to_find);
-	cout << "Aktualna " << a << " ";
-	print_array2(anktualna, count_number_to_find);
-	cout << "Max " << b << " ";
-	print_array2(x, count_number_to_find);
-	if (a >= b)
+	int iterations = 0;
+	for ( ; iterations < MAX_ITERATIONS; iterations++)
 	{
-		for (int j = 0; j < count_number_to_find; j++)
+		// Po wszystkich sasiadach
+		for (int i = 0; i < SIZE; i++)
 		{
-			tmp = anktualna[j];
-			x[j] = tmp;
+
+			anktualna->set_new_value(x);
+
+			// dodaj -1 i +1 do kazdje liczby pokolei
+			if (x->array[i] < 9)
+			{
+				anktualna->array[i] = x->array[i] + 1;
+				if (CountScore(secret, anktualna) >= CountScore(secret, x))
+				{
+					x->set_new_value(anktualna);
+				}
+			}
+
+			anktualna->set_new_value(x);
+
+			if (x->array[i] > 0)
+			{
+				anktualna->array[i] = x->array[i] - 1;
+				if (CountScore(secret, anktualna) >= CountScore(secret, x))
+				{
+					x->set_new_value(anktualna);
+				}
+			}
 		}
+
+		if (CountScore(secret, x) == MAX_SCORE)
+			break;
+
 	}
 
+	cout << "Wspinaczokwy: \t";
+	x->print();
+	cout << "\t" << CountScore(secret, x);
+	cout << "\t" << iterations; 
+	cout << endl;
+
+	delete x, anktualna, Best;
 }
 
-bool juz_odwiedzony(int ** tabu, int * x, int count_number_to_find, int size_tabu) {
+
+bool juz_odwiedzony(int ** tabu, Number * x, int size_tabu) {
 
 	int j = 0;
 	// po całej tablicy tabu
 	for(int i = 0; i < size_tabu; i++) {
 		// porównanie elementów
 		j = 0;
-		for( ; j < count_number_to_find; j++) {
-			if(tabu[i][j] != x[j]) {
+		for( ; j < SIZE; j++) {
+			if(tabu[i][j] != x->array[j]) {
 				break;
 			}
 		}
 		// jest identyczny w tablicy
-		if(j == count_number_to_find) {
+		if(j == SIZE) {
 			return true;
 		}
 	}
@@ -344,117 +318,80 @@ bool juz_odwiedzony(int ** tabu, int * x, int count_number_to_find, int size_tab
 }
 
 
-void przeszukiwanie_tabu(int *secret_numbers, int count_number_to_find)
+void przeszukiwanie_tabu(Number *secret)
 {
+	//wykonanie kroku
+	// s = SELECT(NEIGHBORS(s),t))
+	// //aktualizowanie listy tabu
+	// t = UPDATE TABU(s,t)
+	// //najlepsze rozwiązanie zapamiętujemy
+	// if (f(best) < f(s))
+	// {
+	// 	best = s
+	// }
+
 	int w = 100;
 	int liczba_w_tabu = 0;
 
 	int **tab2 = new int *[w];
 	for (int i = 0; i < w; ++i)
 	{
-		tab2[i] = new int[count_number_to_find];
-		for (int j = 0; j < count_number_to_find; ++j) 
+		tab2[i] = new int[SIZE];
+		for (int j = 0; j < SIZE; ++j) 
 			tab2[i][j] = 0;
 	}
 
-	// Random number
-	int *x = new int[count_number_to_find];
-	FillSecretNumbers(x, count_number_to_find);
-
-	int *Best = new int[count_number_to_find];
-
-	int *anktualna = new int[count_number_to_find];
-
-	int tmp;
-
-	for (int j = 0; j < count_number_to_find; j++)
-	{
-		tmp = x[j];
-		anktualna[j] = tmp;
-	}
-
+	Number* x = new Number(SIZE);
+	x->random();
+	Number *Best = new Number(SIZE);
+	Number *anktualna = new Number(SIZE);
 	
-	for (int k = 1; k < 900; k++)
+	int iterations = 0;
+	for ( ; iterations < MAX_ITERATIONS; iterations++)
 	{
 		// Po wszystkich sasiadach
-		// for(int l= 0; l < 2; l++) {
-		for (int i = 0; i < count_number_to_find; i++)
+		for (int i = 0; i < SIZE; i++)
 		{
+			anktualna->set_new_value(x);
 
-			
-		//wykonanie kroku
-		// s = SELECT(NEIGHBORS(s),t))
-		// //aktualizowanie listy tabu
-		// t = UPDATE TABU(s,t)
-		// //najlepsze rozwiązanie zapamiętujemy
-		// if (f(best) < f(s))
-		// {
-		// 	best = s
-		// }
-
-			for (int j = 0; j < count_number_to_find; j++) {
-				tmp = x[j];
-				anktualna[j] = tmp;
-			}
-
-
-			if (x[i] < 9)
+			if (x->array[i] < 9)
 			{
-				anktualna[i] = x[i] + 1;
-				int a = goal2(secret_numbers, anktualna, count_number_to_find);
-				int b = goal2(secret_numbers, x, count_number_to_find);
-				cout << "Aktualna1 " << a << " ";
-				print_array2(anktualna, count_number_to_find);
-				cout << "Max1 " << b << " ";
-				print_array2(x, count_number_to_find);
+				anktualna->array[i] = x->array[i] + 1;
+				int a = CountScore(secret, anktualna);
+				int b = CountScore(secret, x);
+				// cout << "Aktualna1 " << a << " ";
+				// anktualna->print();
+				// cout << "Max1 " << b << " ";
+				// x->print();
 				if (a >= b)
 				{
-					// nie ma w tablicy już odwiedzonych
-					if(!juz_odwiedzony(tab2, anktualna, count_number_to_find, w)) {
-						for (int j = 0; j < count_number_to_find; j++)
-						{
-							tmp = anktualna[j];
-							x[j] = tmp;
-						}
+					if(!juz_odwiedzony(tab2, anktualna, w)) {
+						x->set_new_value(anktualna);
 						//dodaj do tabu x						
-						for (int j = 0; j < count_number_to_find; j++)
+						for (int j = 0; j < SIZE; j++)
 						{
-							tmp = x[j];
-							tab2[liczba_w_tabu%w][j] = tmp;
+							tab2[liczba_w_tabu%w][j] = x->array[j];
 						}
 						liczba_w_tabu++;	
 					}
 				}
 			}
 
-			for (int j = 0; j < count_number_to_find; j++) {
-				tmp = x[j];
-				anktualna[j] = tmp;
-			}
+			anktualna->set_new_value(x);
 
-			if (x[i] > 0)
+			if (x->array[i] > 0)
 			{
-				anktualna[i] = x[i] - 1;
-				int a = goal2(secret_numbers, anktualna, count_number_to_find);
-				int b = goal2(secret_numbers, x, count_number_to_find);
-				cout << "Aktualna2 " << a << " ";
-				print_array2(anktualna, count_number_to_find);
-				cout << "Max2 " << b << " ";
-				print_array2(x, count_number_to_find);
+				anktualna->array[i] = x->array[i] - 1;
+				int a = CountScore(secret, anktualna);
+				int b = CountScore(secret, x);
 				if (a >= b)
 				{
-					// nie ma w tablicy już odwiedzonych
-					if(!juz_odwiedzony(tab2, anktualna, count_number_to_find, w)) {
-						for (int j = 0; j < count_number_to_find; j++)
-						{
-							tmp = anktualna[j];
-							x[j] = tmp;
-						}
+					if(!juz_odwiedzony(tab2, anktualna, w)) {
+						x->set_new_value(anktualna);
 						//dodaj do tabu x						
-						for (int j = 0; j < count_number_to_find; j++)
+						for (int j = 0; j < SIZE; j++)
 						{
-							tmp = x[j];
-							tab2[liczba_w_tabu%w][j] = tmp;
+							tab2[liczba_w_tabu%w][j] = x->array[j];
 						}
 						liczba_w_tabu++;	
 					}
@@ -463,23 +400,18 @@ void przeszukiwanie_tabu(int *secret_numbers, int count_number_to_find)
 
 		}
 
-		// Podmień jesli najlepszy
-		int a = goal2(secret_numbers, x, count_number_to_find);
-		int b = goal2(secret_numbers, Best, count_number_to_find);
-		if (a >= b)
+		if (CountScore(secret, x) >= CountScore(secret, Best))
 		{
-			for (int j = 0; j < count_number_to_find; j++)
-			{
-				tmp = x[j];
-				Best[j] = tmp;
-			}
+			Best->set_new_value(x);
 		}
-
 
 	}
 
-	cout << "TABU:";
-	print_array(Best, count_number_to_find);
+	cout << "Lista Tabu: \t";
+	Best->print();
+	cout << "\t" << CountScore(secret, x);
+	cout << "\t" << iterations; 
+	cout << endl;
 
 	//wypisz tab2[w][k]
 	// for (int i = 0; i < w; ++i, cout << endl)
@@ -491,10 +423,15 @@ void przeszukiwanie_tabu(int *secret_numbers, int count_number_to_find)
 		delete[] tab2[i]; 
 	delete[] tab2;		  
 	tab2 = NULL;
+
+	delete tab2;
+
+	delete Best, x, anktualna;
 }
 
-void symulowane_wyzarzanie(int *secret_numbers, int count_number_to_find) {
+void symulowane_wyzarzanie(Number* secret) {
 
+	// https://nowosad.github.io/ahod/11-simulated-annealing.html#13
 	// 1. Wybierz losowe rozwiązanie startowe i. Ustal paramter T = T_max
 	// 2. Wylicz f(i), czyli koszt rozwiązania i.
 	// 3. Wyznacz propozycję nowego rozwiązania j (np. losowy sąsiad).
@@ -507,35 +444,30 @@ void symulowane_wyzarzanie(int *secret_numbers, int count_number_to_find) {
 	double T = T_MAX;
 
 	// 1. Random number
-	int *x = new int[count_number_to_find];
-	FillSecretNumbers(x, count_number_to_find);
-	int *sasiad = new int[count_number_to_find];
+	Number* x = new Number(SIZE);
+	x->random();
+	Number* sasiad = new Number(SIZE);
 
-	for (int i = 0; i < 1000; i++) {
+	int iterations = 0;
+	for ( ; iterations < MAX_ITERATIONS; iterations++) {
 
-		for (int j = 0; j < count_number_to_find; j++)
-		{
-			sasiad[j] = x[j];
-		}
+		sasiad->set_new_value(x);
 
 		// 3. generate position 0-max and number between 0 and 9: */
 		int value = rand() % 10;
-		int position = rand() % count_number_to_find;
-		sasiad[position] = value;
+		int position = rand() % SIZE;
+		sasiad->array[position] = value;
 
 		// 2.
-		int a = goal2(secret_numbers, x, count_number_to_find);
+		int a = CountScore(secret, x);
 		// 4.
-		int b = goal2(secret_numbers, sasiad, count_number_to_find);
+		int b = CountScore(secret, sasiad);
 
 		// 5. 
 		if (b >= a)
 		{
 			// nowe rozwizanie lepsze, to zawsze nadpisz
-			for (int j = 0; j < count_number_to_find; j++)
-			{
-				x[j] =  sasiad[j];
-			}
+			x->set_new_value(sasiad);
 		} else {
 			// nowe rozwiazanie gorsze, zobaczy czy nadpisac
 			double param, result;
@@ -545,10 +477,7 @@ void symulowane_wyzarzanie(int *secret_numbers, int count_number_to_find) {
 			double randd = (rand() % 100) / 100;
 
 			if ( result > randd ) {
-				for (int j = 0; j < count_number_to_find; j++)
-				{
-					x[j] =  sasiad[j];
-				}
+				x->set_new_value(sasiad);
 			}
 
 			if (T > 0)
@@ -556,10 +485,18 @@ void symulowane_wyzarzanie(int *secret_numbers, int count_number_to_find) {
 
 		}
 
+		if (CountScore(x, secret) == MAX_SCORE)
+			break;
+
 	}
 
-	cout << "Wyzarzanie:";
-	print_array(x, count_number_to_find);
+	cout << "Wyzarzanie: \t";
+	x->print();
+	cout << "\t" << CountScore(secret, x);
+	cout << "\t" << iterations; 
+	cout << endl;
+
+	delete x, sasiad;
 
 }
 
@@ -568,35 +505,30 @@ int main()
 
 	srand(time(NULL));
 
-	int count_number_to_find = 4;
+	SIZE = 10;
+	MAX_SCORE = SIZE * 4;
+	double max_iteration = (int)(pow(10 ,SIZE / 2.0) );
+	MAX_ITERATIONS = (int)max_iteration; 
+	cout << "MAX_ITERATIONS\t" << MAX_ITERATIONS << endl;
+	cout << "MAX_SCORE\t" << MAX_SCORE << endl;
 
-	// Inicjalize secret number
-	int *secret_numbers = new int[count_number_to_find];
-	FillSecretNumbers(secret_numbers, count_number_to_find);
-	cout << "Secret number: ";
-	print_array(secret_numbers, count_number_to_find);
+	Number* secret = new Number(SIZE);
+	secret->random();
+	cout << "Secret number: \t";
+	secret->print();
+	cout << "\tScore  \tIterations";
+	cout << endl;
 
-	// bruteforce(secret_numbers, count_number_to_find);
+	//bruteforce(secret); 
 
-	cout << "Secret number: ";
-	print_array(secret_numbers, count_number_to_find);
+	wspinaczokwy2(secret);
+	wspinaczokwy3(secret);
+	wspinaczokwy(secret);
 
-	// wspinaczokwy(secret_numbers, count_number_to_find);
+	przeszukiwanie_tabu(secret);
 
-	cout << "Secret number: ";
-	print_array(secret_numbers, count_number_to_find);
+	symulowane_wyzarzanie(secret);
 
-	// przeszukiwanie_tabu(secret_numbers, count_number_to_find);
-
-	cout << "Secret number: ";
-	print_array(secret_numbers, count_number_to_find);
-
-	symulowane_wyzarzanie(secret_numbers, count_number_to_find);
-
-	cout << "Secret number: ";
-	print_array(secret_numbers, count_number_to_find);
-
-	delete[] secret_numbers;
-
+	delete secret ;
 	return 0;
 }
