@@ -3,16 +3,16 @@
  *
  *       Filename:  main.cpp
  *
- *    Description:  
+ *    Description:
  *
  *        Version:  1.0
  *        Created:  23.05.2020 18:20:14
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  YOUR NAME (), 
- *   Organization:  
- * 
+ *         Author:  YOUR NAME (),
+ *   Organization:
+ *
  * 	  Compilation:  g++ main.cpp
  *
  * =====================================================================================
@@ -31,8 +31,8 @@
 
 using namespace std;
 
-int WEIGHT_BULL = 4;
-int WEIGHT_COW = 3;
+int WEIGHT_BULL;
+int WEIGHT_COW;
 int MAX_SCORE;
 int SIZE;
 int MAX_ITERATIONS;
@@ -44,30 +44,30 @@ class Number
 	int size;
 	int * array;
 
-	Number() 
-    { 
+	Number()
+    {
 		this->size = 4;
         this->array = new int[this->size];
 		for (int i = 0; i < this->size; i++)
 		{
 			this->array[i] = 0;
 		}
-    } 
+    }
 
-	Number(int size) 
-    { 
+	Number(int size)
+    {
 		this->size = size;
         this->array = new int[this->size];
 		for (int i = 0; i < this->size; i++)
 		{
 			this->array[i] = 0;
 		}
-    } 
+    }
 
-	~Number() 
-    { 
+	~Number()
+    {
         delete[] this->array;
-    } 
+    }
 
 	void print()
 	{
@@ -123,7 +123,7 @@ int CountScore(Number *a, Number *b)
 	// COUNT COW;
 	for (int j = 0; j < 10; j++)
 	{
-		// get smaller number and add to cow, smaller means repeated the same number
+		// get smaller number and add to cow, smaller means reapetad the same number
 		if (a_count[j] <= b_count[j])
 			cow += a_count[j];
 		else
@@ -132,7 +132,7 @@ int CountScore(Number *a, Number *b)
 
 	//cout << "BULL" << bull << "COW" << cow << endl;
 
-	return 4 * bull + 2 * cow;
+	return WEIGHT_BULL * bull + WEIGHT_COW * cow;
 }
 
 // -------- Algorithms -----
@@ -141,11 +141,13 @@ void bruteforce(Number *secret)
 {
 	Number *x = new Number(SIZE);
 
+	int iterations = 0;
 	while (1)
 	{
-		// Increment x by one
+		//Increment x by one
 		for (int i = 0; i < SIZE; i++)
 		{
+			iterations++;
 			if (x->array[i] < 9)
 			{
 				x->array[i]++;
@@ -155,18 +157,24 @@ void bruteforce(Number *secret)
 			{
 				x->array[i] = 0;
 			}
-		}
 
+		}
+//Show that it's actually working
+//        cout << "Checking " << testval++<<" comparing to ";
+//        secret->print();
+//        cout << endl;
 		if (CountScore(x, secret) == MAX_SCORE)
 			break;
 	}
 
 	cout << "Bruteforce: \t";
 	x->print();
-	cout << "\t" << CountScore(secret, x) << endl;
+	cout << "\t" << CountScore(secret, x);
+	cout << "\t" << iterations;
+	cout << endl;
 }
 
-void wspinaczokwy(Number *secret)
+void wspinaczokwy_random(Number *secret)
 {
 
 	Number* x = new Number(SIZE);
@@ -186,7 +194,7 @@ void wspinaczokwy(Number *secret)
 		if (CountScore(secret, anktualna) >= CountScore(secret, x))
 		{
 			x->set_new_value(anktualna);
-		}	
+		}
 
 		if (CountScore(secret, x) == MAX_SCORE)
 			break;
@@ -196,13 +204,13 @@ void wspinaczokwy(Number *secret)
 	cout << "Wspinaczokwy: \t";
 	x->print();
 	cout << "\t" << CountScore(secret, x);
-	cout << "\t" << iterations; 
+	cout << "\t" << iterations;
 	cout << endl;
 
 	delete x, anktualna, Best;
 }
 
-void wspinaczokwy3(Number *secret)
+void wspinaczokwy_all_neighbor(Number *secret)
 {
 
 	Number* x = new Number(SIZE);
@@ -211,6 +219,7 @@ void wspinaczokwy3(Number *secret)
 	Number *anktualna = new Number(SIZE);
 
 	int iterations = 0;
+	int number_ask_score = 0;
 	for ( ; iterations < MAX_ITERATIONS; iterations++)
 	{
 		// Po wszystkich sasiadach
@@ -221,6 +230,7 @@ void wspinaczokwy3(Number *secret)
 				anktualna->set_new_value(x);
 				anktualna->array[i] = j;
 
+				number_ask_score++;
 				if (CountScore(secret, anktualna) >= CountScore(secret, x))
 				{
 					x->set_new_value(anktualna);
@@ -236,13 +246,13 @@ void wspinaczokwy3(Number *secret)
 	cout << "Wspinaczokwy: \t";
 	x->print();
 	cout << "\t" << CountScore(secret, x);
-	cout << "\t" << iterations; 
+	cout << "\t" << number_ask_score;
 	cout << endl;
 
 	delete x, anktualna, Best;
 }
 
-void wspinaczokwy2(Number *secret)
+void wspinaczokwy(Number *secret)
 {
 
 	Number* x = new Number(SIZE);
@@ -289,7 +299,7 @@ void wspinaczokwy2(Number *secret)
 	cout << "Wspinaczokwy: \t";
 	x->print();
 	cout << "\t" << CountScore(secret, x);
-	cout << "\t" << iterations; 
+	cout << "\t" << iterations;
 	cout << endl;
 
 	delete x, anktualna, Best;
@@ -337,7 +347,7 @@ void przeszukiwanie_tabu(Number *secret)
 	for (int i = 0; i < w; ++i)
 	{
 		tab2[i] = new int[SIZE];
-		for (int j = 0; j < SIZE; ++j) 
+		for (int j = 0; j < SIZE; ++j)
 			tab2[i][j] = 0;
 	}
 
@@ -345,7 +355,7 @@ void przeszukiwanie_tabu(Number *secret)
 	x->random();
 	Number *Best = new Number(SIZE);
 	Number *anktualna = new Number(SIZE);
-	
+
 	int iterations = 0;
 	for ( ; iterations < MAX_ITERATIONS; iterations++)
 	{
@@ -367,12 +377,12 @@ void przeszukiwanie_tabu(Number *secret)
 				{
 					if(!juz_odwiedzony(tab2, anktualna, w)) {
 						x->set_new_value(anktualna);
-						//dodaj do tabu x						
+						//dodaj do tabu x
 						for (int j = 0; j < SIZE; j++)
 						{
 							tab2[liczba_w_tabu%w][j] = x->array[j];
 						}
-						liczba_w_tabu++;	
+						liczba_w_tabu++;
 					}
 				}
 			}
@@ -388,12 +398,12 @@ void przeszukiwanie_tabu(Number *secret)
 				{
 					if(!juz_odwiedzony(tab2, anktualna, w)) {
 						x->set_new_value(anktualna);
-						//dodaj do tabu x						
+						//dodaj do tabu x
 						for (int j = 0; j < SIZE; j++)
 						{
 							tab2[liczba_w_tabu%w][j] = x->array[j];
 						}
-						liczba_w_tabu++;	
+						liczba_w_tabu++;
 					}
 				}
 			}
@@ -410,7 +420,7 @@ void przeszukiwanie_tabu(Number *secret)
 	cout << "Lista Tabu: \t";
 	Best->print();
 	cout << "\t" << CountScore(secret, x);
-	cout << "\t" << iterations; 
+	cout << "\t" << iterations;
 	cout << endl;
 
 	//wypisz tab2[w][k]
@@ -420,8 +430,8 @@ void przeszukiwanie_tabu(Number *secret)
 
 	//zniszcz tab2
 	for (int i(0); i < w; ++i)
-		delete[] tab2[i]; 
-	delete[] tab2;		  
+		delete[] tab2[i];
+	delete[] tab2;
 	tab2 = NULL;
 
 	delete tab2;
@@ -463,7 +473,7 @@ void symulowane_wyzarzanie(Number* secret) {
 		// 4.
 		int b = CountScore(secret, sasiad);
 
-		// 5. 
+		// 5.
 		if (b >= a)
 		{
 			// nowe rozwizanie lepsze, to zawsze nadpisz
@@ -493,7 +503,7 @@ void symulowane_wyzarzanie(Number* secret) {
 	cout << "Wyzarzanie: \t";
 	x->print();
 	cout << "\t" << CountScore(secret, x);
-	cout << "\t" << iterations; 
+	cout << "\t" << iterations;
 	cout << endl;
 
 	delete x, sasiad;
@@ -505,10 +515,12 @@ int main()
 
 	srand(time(NULL));
 
-	SIZE = 10;
-	MAX_SCORE = SIZE * 4;
-	double max_iteration = (int)(pow(10 ,SIZE / 2.0) );
-	MAX_ITERATIONS = (int)max_iteration; 
+	WEIGHT_BULL = 5;
+	WEIGHT_COW = 2;
+	SIZE = 6;
+	MAX_SCORE = SIZE * WEIGHT_BULL;
+	double max_iteration = (int)((pow(10 ,SIZE / 2.0) ));
+	MAX_ITERATIONS = (int)max_iteration;
 	cout << "MAX_ITERATIONS\t" << MAX_ITERATIONS << endl;
 	cout << "MAX_SCORE\t" << MAX_SCORE << endl;
 
@@ -519,11 +531,11 @@ int main()
 	cout << "\tScore  \tIterations";
 	cout << endl;
 
-	//bruteforce(secret); 
+	bruteforce(secret);
 
-	wspinaczokwy2(secret);
-	wspinaczokwy3(secret);
-	wspinaczokwy(secret);
+//	wspinaczokwy(secret);
+	wspinaczokwy_all_neighbor(secret);
+	wspinaczokwy_random(secret);
 
 	przeszukiwanie_tabu(secret);
 
