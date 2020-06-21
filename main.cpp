@@ -28,9 +28,11 @@
 #include <ctime>
 #include <tuple>
 #include <math.h>
+#include <chrono>
 
 using namespace std;
 
+unsigned int OCENA_ITERACJA;
 int WEIGHT_BULL;
 int WEIGHT_COW;
 int MAX_SCORE;
@@ -104,7 +106,7 @@ int CountScore(Number *a, Number *b)
 	int cow = 0;
 	int a_count[10] = {0};
 	int b_count[10] = {0};
-
+    OCENA_ITERACJA++;
 	// COUNT BULL; find bull or increse, we count all number to find which reapet
 	for (int i = 0; i < SIZE; i++)
 	{
@@ -147,7 +149,7 @@ void bruteforce(Number *secret)
 		//Increment x by one
 		for (int i = 0; i < SIZE; i++)
 		{
-			iterations++;
+			//iterations++;
 			if (x->array[i] < 9)
 			{
 				x->array[i]++;
@@ -163,6 +165,7 @@ void bruteforce(Number *secret)
 //        cout << "Checking " << testval++<<" comparing to ";
 //        secret->print();
 //        cout << endl;
+        iterations++;
 		if (CountScore(x, secret) == MAX_SCORE)
 			break;
 	}
@@ -205,6 +208,7 @@ void wspinaczokwy_random(Number *secret)
 	x->print();
 	cout << "\t" << CountScore(secret, x);
 	cout << "\t" << iterations;
+	cout << "\t" << (double)CountScore(secret,x)/iterations << " solution quality";
 	cout << endl;
 
 	delete x, anktualna, Best;
@@ -247,6 +251,7 @@ void wspinaczokwy_all_neighbor(Number *secret)
 	x->print();
 	cout << "\t" << CountScore(secret, x);
 	cout << "\t" << number_ask_score;
+	cout << "\t" << (double)CountScore(secret,x)/number_ask_score << " solution quality";
 	cout << endl;
 
 	delete x, anktualna, Best;
@@ -300,6 +305,7 @@ void wspinaczokwy(Number *secret)
 	x->print();
 	cout << "\t" << CountScore(secret, x);
 	cout << "\t" << iterations;
+	cout << "\t" << (double)CountScore(secret,x)/iterations << " solution quality";
 	cout << endl;
 
 	delete x, anktualna, Best;
@@ -421,6 +427,7 @@ void przeszukiwanie_tabu(Number *secret)
 	Best->print();
 	cout << "\t" << CountScore(secret, x);
 	cout << "\t" << iterations;
+	cout << "\t" << (double)CountScore(secret,x)/iterations << " solution quality";
 	cout << endl;
 
 	//wypisz tab2[w][k]
@@ -480,8 +487,7 @@ void symulowane_wyzarzanie(Number* secret) {
 			x->set_new_value(sasiad);
 		} else {
 			// nowe rozwiazanie gorsze, zobaczy czy nadpisac
-			double param, result;
-			param = 5.0;
+			double result;
 			result = exp ((b-a)/T);
 
 			double randd = (rand() % 100) / 100;
@@ -489,9 +495,9 @@ void symulowane_wyzarzanie(Number* secret) {
 			if ( result > randd ) {
 				x->set_new_value(sasiad);
 			}
-
+            //Stygnięcie przy stałej temperaturze otoczenia
 			if (T > 0)
-				T = T - 2.0;
+				T = T -2.0;
 
 		}
 
@@ -504,6 +510,7 @@ void symulowane_wyzarzanie(Number* secret) {
 	x->print();
 	cout << "\t" << CountScore(secret, x);
 	cout << "\t" << iterations;
+	cout << "\t" << (double)CountScore(secret,x)/iterations << " solution quality";
 	cout << endl;
 
 	delete x, sasiad;
@@ -517,7 +524,7 @@ int main()
 
 	WEIGHT_BULL = 5;
 	WEIGHT_COW = 2;
-	SIZE = 6;
+	SIZE = 9;
 	MAX_SCORE = SIZE * WEIGHT_BULL;
 	double max_iteration = (int)((pow(10 ,SIZE / 2.0) ));
 	MAX_ITERATIONS = (int)max_iteration;
@@ -531,15 +538,45 @@ int main()
 	cout << "\tScore  \tIterations";
 	cout << endl;
 
+	OCENA_ITERACJA=0;
+
+    auto start = std::chrono::high_resolution_clock::now();
 	bruteforce(secret);
+	auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
-//	wspinaczokwy(secret);
+    auto start2 = std::chrono::high_resolution_clock::now();
+	wspinaczokwy(secret);
+	auto finish2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = finish2 - start2;
+    std::cout << "Elapsed time: " << elapsed2.count() << " s\n";
+
+    auto start3 = std::chrono::high_resolution_clock::now();
 	wspinaczokwy_all_neighbor(secret);
+	auto finish3 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed3 = finish3 - start3;
+    std::cout << "Elapsed time: " << elapsed3.count() << " s\n";
+
+    auto start4 = std::chrono::high_resolution_clock::now();
 	wspinaczokwy_random(secret);
+	auto finish4 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed4 = finish4 - start4;
+    std::cout << "Elapsed time: " << elapsed4.count() << " s\n";
 
+    auto start5 = std::chrono::high_resolution_clock::now();
 	przeszukiwanie_tabu(secret);
+	auto finish5 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed5 = finish5 - start5;
+    std::cout << "Elapsed time: " << elapsed5.count() << " s\n";
 
+    auto start6 = std::chrono::high_resolution_clock::now();
 	symulowane_wyzarzanie(secret);
+	auto finish6 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed6 = finish6 - start6;
+    std::cout << "Elapsed time: " << elapsed6.count() << " s\n";
+
+	cout << "Calls to CountScore: " << OCENA_ITERACJA;
 
 	delete secret ;
 	return 0;
